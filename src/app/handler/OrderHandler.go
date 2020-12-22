@@ -2,6 +2,7 @@ package handler
 
 import (
 	"app/command"
+	. "domain"
 	"infra"
 )
 
@@ -14,5 +15,11 @@ type OrderHandlerImpl struct {
 }
 
 func (handler OrderHandlerImpl) CreateOrder(command command.CreateOrderCommand) {
-	handler.orderDAO.CreateOrder()
+	order := Order{
+		Id:          Id{Value: command.Id},
+		Name:        Name{Value: command.Name},
+		Price:       Price{Value: command.Price},
+		Description: Description{Value: command.Description},
+	}
+	handler.orderDAO.CreateOrder(order)
 }

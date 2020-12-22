@@ -10,7 +10,7 @@ import (
 )
 
 var orderDAO infra.OrderDAO = infra.OrderDAOImpl{}
-var orderService OrderService = OrderServiceImpl{orderDAO}
+var orderService OrderService = OrderServiceImpl{OrderDAO: orderDAO}
 
 func main() {
 	port := "1981"
