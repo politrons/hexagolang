@@ -24,5 +24,5 @@ type OrderServiceImpl struct {
 }
 
 func (service OrderServiceImpl) GetOrder(id int) Order {
-	return service.OrderDAO.GetOrder(OrderId{Value: id})
+	return service.OrderDAO.Rehydrate(OrderId{Value: id})
 }

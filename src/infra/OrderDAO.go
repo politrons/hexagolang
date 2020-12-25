@@ -6,10 +6,6 @@ type OrderDAO interface {
 	Rehydrate(orderId OrderId) Order
 
 	AddEvent(orderId OrderId, event Event)
-
-	/*	GetOrder(id OrderId) Order
-
-		CreateOrder(orderCreated OrderCreated)*/
 }
 
 type OrderDAOImpl struct {
@@ -22,19 +18,9 @@ func (orderDAO OrderDAOImpl) AddEvent(orderId OrderId, event Event) {
 }
 
 func (orderDAO OrderDAOImpl) Rehydrate(orderId OrderId) Order {
-
-}
-
-/*
-func (orderDAO OrderDAOImpl) GetOrder(id OrderId) Order {
-	order, exist := orderDAO.orders[id]
-	if !exist {
-		return Order{}
-	} else {
-		return order
+	var order = Order{}
+	for _, event := range orderDAO.orderEvents[orderId] {
+		order = event.Process(order)
 	}
+	return order
 }
-
-func (orderDAO OrderDAOImpl) CreateOrder(orderCreated OrderCreated) {
-	orderDAO.orders[orderCreated.Order.Id] = orderCreated.Order
-}*/
