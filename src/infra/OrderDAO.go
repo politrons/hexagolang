@@ -3,16 +3,30 @@ package infra
 import . "domain"
 
 type OrderDAO interface {
-	GetOrder(id Id) Order
+	Rehydrate(orderId OrderId) Order
 
-	CreateOrder(Order)
+	AddEvent(orderId OrderId, event Event)
+
+	/*	GetOrder(id OrderId) Order
+
+		CreateOrder(orderCreated OrderCreated)*/
 }
 
 type OrderDAOImpl struct {
-	orders map[Id]Order
+	orderEvents map[OrderId][]Event
 }
 
-func (orderDAO OrderDAOImpl) GetOrder(id Id) Order {
+func (orderDAO OrderDAOImpl) AddEvent(orderId OrderId, event Event) {
+	events := orderDAO.orderEvents[orderId]
+	orderDAO.orderEvents[orderId] = append(events, event)
+}
+
+func (orderDAO OrderDAOImpl) Rehydrate(orderId OrderId) Order {
+
+}
+
+/*
+func (orderDAO OrderDAOImpl) GetOrder(id OrderId) Order {
 	order, exist := orderDAO.orders[id]
 	if !exist {
 		return Order{}
@@ -21,6 +35,6 @@ func (orderDAO OrderDAOImpl) GetOrder(id Id) Order {
 	}
 }
 
-func (orderDAO OrderDAOImpl) CreateOrder(order Order) {
-	orderDAO.orders[order.Id] = order
-}
+func (orderDAO OrderDAOImpl) CreateOrder(orderCreated OrderCreated) {
+	orderDAO.orders[orderCreated.Order.Id] = orderCreated.Order
+}*/

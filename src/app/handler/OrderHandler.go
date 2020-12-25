@@ -11,15 +11,17 @@ type OrderHandler interface {
 }
 
 type OrderHandlerImpl struct {
-	orderDAO infra.OrderDAO
+	OrderDAO infra.OrderDAO
 }
 
 func (handler OrderHandlerImpl) CreateOrder(command command.CreateOrderCommand) {
 	order := Order{
-		Id:          Id{Value: command.Id},
+		Id:          OrderId{Value: command.Id},
 		Name:        Name{Value: command.Name},
 		Price:       Price{Value: command.Price},
 		Description: Description{Value: command.Description},
 	}
-	handler.orderDAO.CreateOrder(order)
+
+	orderCreated := OrderCreated{Order: order}
+	handler.OrderDAO.CreateOrder(orderCreated)
 }

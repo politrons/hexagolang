@@ -1,6 +1,7 @@
 package main
 
 import (
+	"app/handler"
 	. "app/service"
 	"encoding/json"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 
 var orderDAO infra.OrderDAO = infra.OrderDAOImpl{}
 var orderService OrderService = OrderServiceImpl{OrderDAO: orderDAO}
+var orderHandler handler.OrderHandler = handler.OrderHandlerImpl{OrderDAO: orderDAO}
 
 func main() {
 	port := "1981"
@@ -32,6 +34,11 @@ func findOrderHandle(writer http.ResponseWriter, request *http.Request) {
 	renderResponse(writer, response)
 }
 
+func createOrderHandle(writer http.ResponseWriter, request *http.Request) {
+	response := "Create"
+	renderResponse(writer, []byte(response))
+}
+
 func removeProductHandle(writer http.ResponseWriter, request *http.Request) {
 	response := "Remove"
 	renderResponse(writer, []byte(response))
@@ -39,11 +46,6 @@ func removeProductHandle(writer http.ResponseWriter, request *http.Request) {
 
 func addProductHandle(writer http.ResponseWriter, request *http.Request) {
 	response := "Add"
-	renderResponse(writer, []byte(response))
-}
-
-func createOrderHandle(writer http.ResponseWriter, request *http.Request) {
-	response := "Create"
 	renderResponse(writer, []byte(response))
 }
 
