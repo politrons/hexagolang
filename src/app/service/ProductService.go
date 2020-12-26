@@ -23,6 +23,6 @@ type ProductServiceImpl struct {
 	ProductDAO infra.ProductDAO
 }
 
-func (service ProductServiceImpl) GetProduct(productId string) (bool, Order) {
+func (service ProductServiceImpl) GetProduct(productId string) (bool, Product) {
 	return service.ProductDAO.FindProduct(productId)
 }
