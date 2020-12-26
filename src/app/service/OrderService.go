@@ -11,7 +11,7 @@ In order to have an implementation of this interface you need to have a [struct]
 you extend methods like the one defines in the interface
 */
 type OrderService interface {
-	GetOrder(id int) Order
+	GetOrder(id int) (boolean Order)
 }
 
 /**
@@ -23,6 +23,6 @@ type OrderServiceImpl struct {
 	OrderDAO infra.OrderDAO
 }
 
-func (service OrderServiceImpl) GetOrder(id int) Order {
+func (service OrderServiceImpl) GetOrder(id int) (bool Order) {
 	return service.OrderDAO.Rehydrate(OrderId{Value: id})
 }

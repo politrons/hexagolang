@@ -7,21 +7,20 @@ import (
 )
 
 type OrderHandler interface {
-	CreateOrder(command command.CreateOrderCommand)
+	CreateOrder(command command.CreateOrderCommand) OrderId
 }
 
 type OrderHandlerImpl struct {
 	OrderDAO infra.OrderDAO
 }
 
-func (handler OrderHandlerImpl) CreateOrder(command command.CreateOrderCommand) {
+func (handler OrderHandlerImpl) CreateOrder(command command.CreateOrderCommand) OrderId {
 	order := Order{
-		Id:          OrderId{Value: command.Id},
-		Name:        Name{Value: command.Name},
-		Price:       Price{Value: command.Price},
-		Description: Description{Value: command.Description},
+		Id:         OrderId{Value: command.Id},
+		Products:   []Product{},
+		TotalPrice: Price{},
 	}
 
 	orderCreated := OrderCreated{Order: order}
-	handler.OrderDAO.CreateOrder(orderCreated)
+	handler.OrderDAO.AddEvent(order.Id, orderCreated)
 }

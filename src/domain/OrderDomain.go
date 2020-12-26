@@ -12,7 +12,7 @@ type Price struct{ Value float64 }
 
 type Order struct {
 	Id         OrderId
-	products   []Product
+	Products   []Product
 	TotalPrice Price
 }
 
