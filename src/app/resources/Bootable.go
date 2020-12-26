@@ -24,7 +24,7 @@ func main() {
 	server.HandleFunc("/order/", createOrderId)
 	server.HandleFunc("/order/find/{id}", findOrder)
 	server.HandleFunc("/order/create/", createOrder)
-	server.HandleFunc("/product/{id}/", addProduct)
+	server.HandleFunc("/product/{id}/", findProduct)
 	server.HandleFunc("/product/add/", addProduct)
 	server.HandleFunc("/product/remove/", removeProduct)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), server))
@@ -52,6 +52,10 @@ func createOrder(writer http.ResponseWriter, request *http.Request) {
 	renderResponse(writer, []byte(orderId))
 }
 
+/**
+Using the orderId, we're able to rehydrate the Order model from all the events persisted,
+so using event sourcing, we can recreate the current status of the Order
+*/
 func findOrder(writer http.ResponseWriter, request *http.Request) {
 	orderId := getOrderId(request)
 	_, order := orderService.GetOrder(orderId)
@@ -60,6 +64,17 @@ func findOrder(writer http.ResponseWriter, request *http.Request) {
 		panic(err)
 	}
 	renderResponse(writer, response)
+}
+
+/**
+Having a productId we can search for a product to obtain information, and then we create a transactionId for the product
+in order to be idempotent when client want to add a product in the basket
+*/
+func findProduct(writer http.ResponseWriter, request *http.Request) {
+	productId := []byte(uuid.New().String())
+
+	response := "Remove"
+	renderResponse(writer, []byte(response))
 }
 
 func removeProduct(writer http.ResponseWriter, request *http.Request) {

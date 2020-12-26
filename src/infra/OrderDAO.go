@@ -12,6 +12,12 @@ type OrderDAOImpl struct {
 	orderEvents map[OrderId][]Event
 }
 
+/**
+Rehydrate function is the keystone of event sourcing. We can recreate from scratch the state of an entity
+using all the events that just happens from the creation of the order, and then all the products added, or deleted
+afterwards.
+Each Event must implement [Process] which it will interact with Order model to recreate to the latest state.
+*/
 func (orderDAO OrderDAOImpl) Rehydrate(orderId OrderId) (bool, Order) {
 	var exist = false
 	var order = Order{}
