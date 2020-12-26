@@ -1,6 +1,7 @@
 package main
 
 import (
+	"app/command"
 	"app/handler"
 	. "app/service"
 	"encoding/json"
@@ -9,7 +10,6 @@ import (
 	"infra"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -31,7 +31,7 @@ func main() {
 }
 
 /**
-In order to have an idempotent transaction in creation of Order, we generate a orderId
+In order to have an idempotent endpoint in creation of Order, we generate a orderId
 and the client must use this id in the another endpoint to perform the creation of the Order
 */
 func createOrderId(writer http.ResponseWriter, request *http.Request) {
@@ -39,18 +39,22 @@ func createOrderId(writer http.ResponseWriter, request *http.Request) {
 	renderResponse(writer, orderId)
 }
 
+/**
+In order to have an idempotent endpoint,We check if the Order already exist,
+if it does not, we create one, otherwise we just return the OrderId.
+*/
 func createOrder(writer http.ResponseWriter, request *http.Request) {
-
 	orderId := getOrderId(request)
-	exist, order := orderService.GetOrder(orderId)
-
-	response := "Create"
-	renderResponse(writer, []byte(response))
+	exist, _ := orderService.GetOrder(orderId)
+	if !exist {
+		orderHandler.CreateOrder(command.CreateOrderCommand{Id: orderId})
+	}
+	renderResponse(writer, []byte(orderId))
 }
 
 func findOrder(writer http.ResponseWriter, request *http.Request) {
 	orderId := getOrderId(request)
-	order := orderService.GetOrder(orderId)
+	_, order := orderService.GetOrder(orderId)
 	response, err := json.Marshal(order)
 	if err != nil {
 		panic(err)
@@ -69,18 +73,14 @@ func addProduct(writer http.ResponseWriter, request *http.Request) {
 }
 
 func renderResponse(writer http.ResponseWriter, response []byte) {
-	code, error := writer.Write(response)
-	if error != nil {
+	code, err := writer.Write(response)
+	if err != nil {
 		log.Println("Error rendering response. Caused by ")
 	} else {
 		log.Printf("Success in response with code %d", code)
 	}
 }
 
-func getOrderId(request *http.Request) int {
-	orderId, err := strconv.Atoi(strings.Split(request.URL.Path, "/")[2])
-	if err != nil {
-		panic(err)
-	}
-	return orderId
+func getOrderId(request *http.Request) string {
+	return strings.Split(request.URL.Path, "/")[2]
 }

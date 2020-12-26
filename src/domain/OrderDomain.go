@@ -1,8 +1,8 @@
 package domain
 
-type ProductId struct{ Value int }
+type ProductId struct{ Value string }
 
-type OrderId struct{ Value int }
+type OrderId struct{ Value string }
 
 type Name struct{ Value string }
 
