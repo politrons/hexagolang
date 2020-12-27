@@ -3,7 +3,7 @@ package handler
 import (
 	"app/command"
 	. "domain"
-	"infra"
+	"infra/dao"
 )
 
 type ProductHandler interface {
@@ -11,7 +11,7 @@ type ProductHandler interface {
 }
 
 type ProductHandlerImpl struct {
-	OrderDAO infra.OrderDAO
+	OrderDAO dao.OrderDAO
 }
 
 /**

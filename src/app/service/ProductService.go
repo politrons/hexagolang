@@ -2,7 +2,7 @@ package service
 
 import (
 	. "domain"
-	"infra"
+	"infra/dao"
 )
 
 /**
@@ -22,7 +22,7 @@ To be consider a interface implementation you need also to create extended funct
 that implement the interface methods.
 */
 type ProductServiceImpl struct {
-	ProductDAO infra.ProductDAO
+	ProductDAO dao.ProductDAO
 }
 
 func (service ProductServiceImpl) GetProduct(productId string) (bool, Product) {

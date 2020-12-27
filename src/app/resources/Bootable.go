@@ -8,16 +8,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
-	"infra"
+	"infra/dao"
+	"infra/response"
 	"log"
 	"net/http"
 	"strings"
+	"time"
 )
 
-var orderDAO infra.OrderDAO = infra.OrderDAOImpl{}
+var orderDAO dao.OrderDAO = dao.OrderDAOImpl{}
 var orderService OrderService = OrderServiceImpl{OrderDAO: orderDAO}
 var orderHandler handler.OrderHandler = handler.OrderHandlerImpl{OrderDAO: orderDAO}
-var productDAO infra.ProductDAO = infra.ProductDAOImpl{}
+var productDAO dao.ProductDAO = dao.ProductDAOImpl{}
 var productService ProductService = ProductServiceImpl{ProductDAO: productDAO}
 
 func main() {
@@ -48,12 +50,13 @@ if it does not, we create one, otherwise we just return the OrderId.
 */
 func createOrder(writer http.ResponseWriter, request *http.Request) {
 	orderId := getArgumentAtIndex(request, 3)
-	exist, _ := orderService.GetOrder(orderId)
-	if !exist {
-		log.Printf("Creating order for transaction Id t:%s......", orderId)
-		orderHandler.CreateOrder(command.CreateOrderCommand{Id: orderId})
-	}
-	renderResponse(writer, []byte(orderId))
+	awaitOrderResponseChannel(orderService.GetOrder(orderId), func(orderResponse response.OrderResponse) {
+		if !orderResponse.Exist {
+			log.Printf("Creating order for transaction Id t:%s......", orderId)
+			orderHandler.CreateOrder(command.CreateOrderCommand{Id: orderId})
+		}
+		renderResponse(writer, []byte(orderId))
+	})
 }
 
 /**
@@ -62,12 +65,32 @@ so using event sourcing, we can recreate the current status of the Order
 */
 func findOrder(writer http.ResponseWriter, request *http.Request) {
 	orderId := getArgumentAtIndex(request, 3)
-	_, order := orderService.GetOrder(orderId)
-	response, err := json.Marshal(order)
-	if err != nil {
-		panic(err)
+	awaitOrderResponseChannel(orderService.GetOrder(orderId), func(orderResponse response.OrderResponse) {
+		jsonResponse, err := json.Marshal(orderResponse.Order)
+		if err != nil {
+			panic(err)
+		}
+		renderResponse(writer, jsonResponse)
+	})
+
+}
+
+/**
+Function that receive a channel and a function to apply with the result of the channel once it ends.
+We keep in a loop waiting for that channel to ends. In case ir does not end in 50ms we break the loop
+and we consider the request wrong
+*/
+func awaitOrderResponseChannel(channel chan response.OrderResponse,
+	action func(orderResponse response.OrderResponse)) {
+loop:
+	for {
+		select {
+		case orderResponse := <-channel:
+			action(orderResponse)
+		case <-time.After(50 * time.Millisecond):
+			break loop
+		}
 	}
-	renderResponse(writer, response)
 }
 
 /**

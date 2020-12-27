@@ -3,7 +3,7 @@ package handler
 import (
 	"app/command"
 	. "domain"
-	"infra"
+	"infra/dao"
 )
 
 type OrderHandler interface {
@@ -11,7 +11,7 @@ type OrderHandler interface {
 }
 
 type OrderHandlerImpl struct {
-	OrderDAO infra.OrderDAO
+	OrderDAO dao.OrderDAO
 }
 
 func (handler OrderHandlerImpl) CreateOrder(command command.CreateOrderCommand) {
