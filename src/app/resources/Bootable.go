@@ -104,13 +104,11 @@ func writeResponse(response http.ResponseWriter, t interface{}) {
 }
 
 func writeSuccessResponse(response http.ResponseWriter, jsonResponse []byte) {
-	response.Header().Set("Content-Type", "application/jsonResponse")
 	response.WriteHeader(http.StatusOK)
 	_, _ = response.Write(jsonResponse)
 }
 
 func writeErrorResponse(response http.ResponseWriter, err error) {
-	response.Header().Set("Content-Type", "application/jsonResponse")
 	response.WriteHeader(http.StatusServiceUnavailable)
 	errorResponse, _ := json.Marshal("Error in request since " + err.Error())
 	_, _ = response.Write(errorResponse)
