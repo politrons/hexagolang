@@ -11,7 +11,9 @@ In order to have an implementation of this interface you need to have a [struct]
 you extend methods like the one defines in the interface
 */
 type ProductService interface {
-	GetProduct(id string) (bool, Order)
+	GetProduct(id string) (bool, Product)
+
+	GetAllProduct() []Product
 }
 
 /**
@@ -25,4 +27,8 @@ type ProductServiceImpl struct {
 
 func (service ProductServiceImpl) GetProduct(productId string) (bool, Product) {
 	return service.ProductDAO.FindProduct(productId)
+}
+
+func (service ProductServiceImpl) GetAllProduct() []Product {
+	return service.ProductDAO.GetAllProducts()
 }

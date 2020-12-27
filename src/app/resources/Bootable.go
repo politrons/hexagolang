@@ -3,6 +3,7 @@ package main
 import (
 	"app/command"
 	"app/handler"
+	"app/render"
 	. "app/service"
 	"encoding/json"
 	"fmt"
@@ -16,15 +17,17 @@ import (
 var orderDAO infra.OrderDAO = infra.OrderDAOImpl{}
 var orderService OrderService = OrderServiceImpl{OrderDAO: orderDAO}
 var orderHandler handler.OrderHandler = handler.OrderHandlerImpl{OrderDAO: orderDAO}
+var productDAO infra.ProductDAO = infra.ProductDAOImpl{}
+var productService ProductService = ProductServiceImpl{ProductDAO: productDAO}
 
 func main() {
 	port := "1981"
 	log.Printf("Running hexagonal server on port:%s......", port)
 	server := http.NewServeMux()
 	server.HandleFunc("/order/", createOrderId)
-	server.HandleFunc("/order/find/{id}", findOrder)
 	server.HandleFunc("/order/create/", createOrder)
-	server.HandleFunc("/product/{id}/", findProduct)
+	server.HandleFunc("/order/find/", findOrder)
+	server.HandleFunc("/product/", findProduct)
 	server.HandleFunc("/product/add/", addProduct)
 	server.HandleFunc("/product/remove/", removeProduct)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), server))
@@ -44,9 +47,10 @@ In order to have an idempotent endpoint,We check if the Order already exist,
 if it does not, we create one, otherwise we just return the OrderId.
 */
 func createOrder(writer http.ResponseWriter, request *http.Request) {
-	orderId := getOrderId(request)
+	orderId := getArgumentAtIndex(request, 3)
 	exist, _ := orderService.GetOrder(orderId)
 	if !exist {
+		log.Printf("Creating order for transaction Id t:%s......", orderId)
 		orderHandler.CreateOrder(command.CreateOrderCommand{Id: orderId})
 	}
 	renderResponse(writer, []byte(orderId))
@@ -57,7 +61,7 @@ Using the orderId, we're able to rehydrate the Order model from all the events p
 so using event sourcing, we can recreate the current status of the Order
 */
 func findOrder(writer http.ResponseWriter, request *http.Request) {
-	orderId := getOrderId(request)
+	orderId := getArgumentAtIndex(request, 3)
 	_, order := orderService.GetOrder(orderId)
 	response, err := json.Marshal(order)
 	if err != nil {
@@ -71,9 +75,13 @@ Having a productId we can search for a product to obtain information, and then w
 in order to be idempotent when client want to add a product in the basket
 */
 func findProduct(writer http.ResponseWriter, request *http.Request) {
-	productId := []byte(uuid.New().String())
+	transactionId := uuid.New().String()
+	products := productService.GetAllProduct()
+	writeResponse(writer, render.ProductsResponse{TransactionId: transactionId, Products: products})
+}
 
-	response := "Remove"
+func addProduct(writer http.ResponseWriter, request *http.Request) {
+	response := "Add"
 	renderResponse(writer, []byte(response))
 }
 
@@ -82,9 +90,30 @@ func removeProduct(writer http.ResponseWriter, request *http.Request) {
 	renderResponse(writer, []byte(response))
 }
 
-func addProduct(writer http.ResponseWriter, request *http.Request) {
-	response := "Add"
-	renderResponse(writer, []byte(response))
+func getArgumentAtIndex(request *http.Request, index int) string {
+	return strings.Split(request.URL.Path, "/")[index]
+}
+
+func writeResponse(response http.ResponseWriter, t interface{}) {
+	jsonResponse, err := json.Marshal(t)
+	if err != nil {
+		writeErrorResponse(response, err)
+	} else {
+		writeSuccessResponse(response, jsonResponse)
+	}
+}
+
+func writeSuccessResponse(response http.ResponseWriter, jsonResponse []byte) {
+	response.Header().Set("Content-Type", "application/jsonResponse")
+	response.WriteHeader(http.StatusOK)
+	_, _ = response.Write(jsonResponse)
+}
+
+func writeErrorResponse(response http.ResponseWriter, err error) {
+	response.Header().Set("Content-Type", "application/jsonResponse")
+	response.WriteHeader(http.StatusServiceUnavailable)
+	errorResponse, _ := json.Marshal("Error in request since " + err.Error())
+	_, _ = response.Write(errorResponse)
 }
 
 func renderResponse(writer http.ResponseWriter, response []byte) {
@@ -94,8 +123,4 @@ func renderResponse(writer http.ResponseWriter, response []byte) {
 	} else {
 		log.Printf("Success in response with code %d", code)
 	}
-}
-
-func getOrderId(request *http.Request) string {
-	return strings.Split(request.URL.Path, "/")[2]
 }

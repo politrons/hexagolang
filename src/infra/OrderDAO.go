@@ -28,7 +28,19 @@ func (orderDAO OrderDAOImpl) Rehydrate(orderId OrderId) (bool, Order) {
 	return exist, order
 }
 
+/**
+We have the list of events attach in a map to an OrderId, in case the order was not yet created we have a nil map,
+so we create one, and then we have to also check if the events already exist for that entry and if it does not
+we also create one.
+*/
 func (orderDAO OrderDAOImpl) AddEvent(orderId OrderId, event Event) {
-	events := orderDAO.orderEvents[orderId]
-	orderDAO.orderEvents[orderId] = append(events, event)
+	if orderDAO.orderEvents == nil {
+		orderDAO.orderEvents = make(map[OrderId][]Event)
+	}
+	events, exist := orderDAO.orderEvents[orderId]
+	if !exist {
+		orderDAO.orderEvents[orderId] = []Event{event}
+	} else {
+		orderDAO.orderEvents[orderId] = append(events, event)
+	}
 }

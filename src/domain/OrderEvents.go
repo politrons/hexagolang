@@ -21,17 +21,17 @@ func (event OrderCreated) Process(order Order) Order {
 }
 
 func (event ProductAdded) Process(order Order) Order {
-	order.products = append(order.products, event.Product)
+	order.Products = append(order.Products, event.Product)
 	return order
 }
 
 func (event ProductRemoved) Process(order Order) Order {
 	var products []Product
-	for _, product := range order.products {
+	for _, product := range order.Products {
 		if product.Id != event.Product.Id {
 			products = append(products, product)
 		}
 	}
-	order.products = products
+	order.Products = products
 	return order
 }
