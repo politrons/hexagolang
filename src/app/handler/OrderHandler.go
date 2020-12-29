@@ -7,7 +7,7 @@ import (
 )
 
 type OrderHandler interface {
-	CreateOrder(command command.CreateOrderCommand)
+	CreateOrder(transactionId string, command command.CreateOrderCommand)
 }
 
 type OrderHandlerImpl struct {
