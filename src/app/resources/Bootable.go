@@ -41,8 +41,8 @@ In order to have an idempotent endpoint in creation of Order, we generate a orde
 and the client must use this id in the another endpoint to perform the creation of the Order
 */
 func createOrderId(writer http.ResponseWriter, request *http.Request) {
-	orderId := []byte(uuid.New().String())
-	renderResponse(writer, orderId)
+	transactionId := []byte(uuid.New().String())
+	renderResponse(writer, transactionId)
 }
 
 /**
@@ -50,13 +50,13 @@ In order to have an idempotent endpoint,We check if the Order already exist,
 if it does not, we create one, otherwise we just return the OrderId.
 */
 func createOrder(writer http.ResponseWriter, request *http.Request) {
-	orderId := getArgumentAtIndex(request, 3)
-	awaitOrderResponseChannel(orderService.GetOrder(orderId), func(orderResponse response.OrderResponse) {
+	transactionId := request.Header.Get("transactionId")
+	awaitOrderResponseChannel(orderService.GetOrder(transactionId), func(orderResponse response.OrderResponse) {
 		if !orderResponse.Exist {
-			log.Printf("Creating order for transaction Id t:%s......", orderId)
-			orderHandler.CreateOrder(command.CreateOrderCommand{Id: orderId})
+			log.Printf("Creating order for transaction Id :%s......", transactionId)
+			orderHandler.CreateOrder(transactionId, command.CreateOrderCommand{Id: transactionId})
 		}
-		renderResponse(writer, []byte(orderId))
+		renderResponse(writer, []byte(transactionId))
 	})
 }
 
@@ -104,16 +104,20 @@ func findProduct(writer http.ResponseWriter, request *http.Request) {
 	writeResponse(writer, render.ProductsResponse{TransactionId: transactionId, Products: products})
 }
 
+/**
+We extract from headers the transactionId to ensure that the event has not been sent and process into the service twice
+implementing then idempotent
+*/
 func addProduct(writer http.ResponseWriter, request *http.Request) {
 	transactionId := request.Header.Get("transactionId")
-	log.Printf("Add product for trasnsactionId %s!", transactionId)
+	log.Printf("Adding product for trasnsactionId %s!", transactionId)
 	decoder := json.NewDecoder(request.Body)
 	addProductCommand := command.AddProductCommand{}
 	err := decoder.Decode(&addProductCommand)
 	if err != nil {
 		writeErrorResponse(writer, err)
 	}
-	productHandler.AddProduct(addProductCommand)
+	productHandler.AddProduct(transactionId, addProductCommand)
 	renderResponse(writer, []byte(""))
 }
 
