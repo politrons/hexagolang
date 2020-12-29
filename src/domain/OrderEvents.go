@@ -2,27 +2,39 @@ package domain
 
 type Event interface {
 	Process(order Order) Order
+	Exist(transactionId string) bool
 }
 
 type OrderCreated struct {
-	Order Order
+	TransactionId string
+	Order         Order
 }
 
 type ProductAdded struct {
-	Product Product
+	TransactionId string
+	Product       Product
 }
 
 type ProductRemoved struct {
-	Product Product
+	TransactionId string
+	Product       Product
 }
 
 func (event OrderCreated) Process(order Order) Order {
 	return event.Order
 }
 
+func (event OrderCreated) Exist(transactionId string) bool {
+	return event.TransactionId == transactionId
+}
+
 func (event ProductAdded) Process(order Order) Order {
 	order.Products = append(order.Products, event.Product)
 	return order
+}
+
+func (event ProductAdded) Exist(transactionId string) bool {
+	return event.TransactionId == transactionId
 }
 
 func (event ProductRemoved) Process(order Order) Order {
@@ -34,4 +46,8 @@ func (event ProductRemoved) Process(order Order) Order {
 	}
 	order.Products = products
 	return order
+}
+
+func (event ProductRemoved) Exist(transactionId string) bool {
+	return event.TransactionId == transactionId
 }

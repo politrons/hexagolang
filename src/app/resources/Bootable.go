@@ -21,6 +21,7 @@ var orderService OrderService = OrderServiceImpl{OrderDAO: orderDAO}
 var orderHandler handler.OrderHandler = handler.OrderHandlerImpl{OrderDAO: orderDAO}
 var productDAO dao.ProductDAO = dao.ProductDAOImpl{}
 var productService ProductService = ProductServiceImpl{ProductDAO: productDAO}
+var productHandler handler.ProductHandler = handler.ProductHandlerImpl{OrderDAO: orderDAO}
 
 func main() {
 	port := "1981"
@@ -104,8 +105,16 @@ func findProduct(writer http.ResponseWriter, request *http.Request) {
 }
 
 func addProduct(writer http.ResponseWriter, request *http.Request) {
-	response := "Add"
-	renderResponse(writer, []byte(response))
+	transactionId := request.Header.Get("transactionId")
+	log.Printf("Add product for trasnsactionId %s!", transactionId)
+	decoder := json.NewDecoder(request.Body)
+	addProductCommand := command.AddProductCommand{}
+	err := decoder.Decode(&addProductCommand)
+	if err != nil {
+		writeErrorResponse(writer, err)
+	}
+	productHandler.AddProduct(addProductCommand)
+	renderResponse(writer, []byte(""))
 }
 
 func removeProduct(writer http.ResponseWriter, request *http.Request) {

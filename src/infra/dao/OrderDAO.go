@@ -4,6 +4,8 @@ import . "domain"
 import . "infra/response"
 
 type OrderDAO interface {
+	GetEvents(orderId OrderId) []Event
+
 	Rehydrate(orderId OrderId) chan OrderResponse
 
 	AddEvent(orderId OrderId, event Event)
@@ -11,6 +13,10 @@ type OrderDAO interface {
 
 type OrderDAOImpl struct {
 	orderEvents map[OrderId][]Event
+}
+
+func (orderDAO OrderDAOImpl) GetEvents(orderId OrderId) []Event {
+	return orderDAO.orderEvents[orderId]
 }
 
 /**
