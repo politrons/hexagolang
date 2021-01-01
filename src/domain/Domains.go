@@ -1,5 +1,7 @@
 package domain
 
+type TransactionId struct{ Value string }
+
 type ProductId struct{ Value string }
 
 type OrderId struct{ Value string }
@@ -17,8 +19,9 @@ type Order struct {
 }
 
 type Product struct {
-	Id          ProductId
-	Name        Name
-	Price       Price
-	Description Description
+	TransactionId TransactionId
+	Id            ProductId
+	Name          Name
+	Price         Price
+	Description   Description
 }

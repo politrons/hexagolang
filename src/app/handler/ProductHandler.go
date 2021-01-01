@@ -22,11 +22,12 @@ func (handler ProductHandlerImpl) AddProduct(transactionId string, command comma
 	exist := handler.eventAlreadyExist(command, transactionId)
 	if !exist {
 		product := Product{
-			Id:          ProductId{Value: command.Id},
-			Price:       Price{Value: command.Price},
-			Description: Description{Value: command.Description},
+			TransactionId: TransactionId{Value: transactionId},
+			Id:            ProductId{Value: command.Id},
+			Price:         Price{Value: command.Price},
+			Description:   Description{Value: command.Description},
 		}
-		productAdded := ProductAdded{TransactionId: transactionId, Product: product}
+		productAdded := ProductAdded{Product: product}
 		handler.OrderDAO.AddEvent(OrderId{Value: command.OrderId}, productAdded)
 	}
 }

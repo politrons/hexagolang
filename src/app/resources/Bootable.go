@@ -41,8 +41,8 @@ In order to have an idempotent endpoint in creation of Order, we generate a orde
 and the client must use this id in the another endpoint to perform the creation of the Order
 */
 func createOrderId(writer http.ResponseWriter, request *http.Request) {
-	transactionId := []byte(uuid.New().String())
-	renderResponse(writer, transactionId)
+	orderId := []byte(uuid.New().String())
+	renderResponse(writer, orderId)
 }
 
 /**
@@ -50,13 +50,13 @@ In order to have an idempotent endpoint,We check if the Order already exist,
 if it does not, we create one, otherwise we just return the OrderId.
 */
 func createOrder(writer http.ResponseWriter, request *http.Request) {
-	transactionId := request.Header.Get("transactionId")
-	awaitOrderResponseChannel(orderService.GetOrder(transactionId), func(orderResponse response.OrderResponse) {
+	orderId := request.Header.Get("orderId")
+	awaitOrderResponseChannel(orderService.GetOrder(orderId), func(orderResponse response.OrderResponse) {
 		if !orderResponse.Exist {
-			log.Printf("Creating order for transaction Id :%s......", transactionId)
-			orderHandler.CreateOrder(transactionId, command.CreateOrderCommand{Id: transactionId})
+			log.Printf("Creating order for orderId Id :%s......", orderId)
+			orderHandler.CreateOrder(orderId, command.CreateOrderCommand{Id: orderId})
 		}
-		renderResponse(writer, []byte(transactionId))
+		renderResponse(writer, []byte(orderId))
 	})
 }
 
@@ -88,7 +88,7 @@ loop:
 		select {
 		case orderResponse := <-channel:
 			action(orderResponse)
-		case <-time.After(50 * time.Millisecond):
+		case <-time.After(5000 * time.Millisecond):
 			break loop
 		}
 	}

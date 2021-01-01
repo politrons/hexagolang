@@ -6,18 +6,15 @@ type Event interface {
 }
 
 type OrderCreated struct {
-	TransactionId string
-	Order         Order
+	Order Order
 }
 
 type ProductAdded struct {
-	TransactionId string
-	Product       Product
+	Product Product
 }
 
 type ProductRemoved struct {
-	TransactionId string
-	Product       Product
+	Product Product
 }
 
 func (event OrderCreated) Process(order Order) Order {
@@ -25,7 +22,7 @@ func (event OrderCreated) Process(order Order) Order {
 }
 
 func (event OrderCreated) Exist(transactionId string) bool {
-	return event.TransactionId == transactionId
+	return event.Order.Id.Value == transactionId
 }
 
 func (event ProductAdded) Process(order Order) Order {
@@ -34,7 +31,7 @@ func (event ProductAdded) Process(order Order) Order {
 }
 
 func (event ProductAdded) Exist(transactionId string) bool {
-	return event.TransactionId == transactionId
+	return event.Product.TransactionId == TransactionId{transactionId}
 }
 
 func (event ProductRemoved) Process(order Order) Order {
@@ -49,5 +46,5 @@ func (event ProductRemoved) Process(order Order) Order {
 }
 
 func (event ProductRemoved) Exist(transactionId string) bool {
-	return event.TransactionId == transactionId
+	return event.Product.TransactionId == TransactionId{transactionId}
 }

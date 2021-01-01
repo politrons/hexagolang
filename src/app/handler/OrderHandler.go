@@ -7,32 +7,32 @@ import (
 )
 
 type OrderHandler interface {
-	CreateOrder(transactionId string, command command.CreateOrderCommand)
+	CreateOrder(orderId string, command command.CreateOrderCommand)
 }
 
 type OrderHandlerImpl struct {
 	OrderDAO dao.OrderDAO
 }
 
-func (handler OrderHandlerImpl) CreateOrder(transactionId string, command command.CreateOrderCommand) {
-	exist := handler.eventAlreadyExist(command, transactionId)
+func (handler OrderHandlerImpl) CreateOrder(orderId string, command command.CreateOrderCommand) {
+	exist := handler.eventAlreadyExist(command, orderId)
 	if !exist {
 		order := Order{
 			Id:         OrderId{Value: command.Id},
 			Products:   []Product{},
 			TotalPrice: Price{},
 		}
-		orderCreated := OrderCreated{TransactionId: transactionId, Order: order}
+		orderCreated := OrderCreated{Order: order}
 		handler.OrderDAO.AddEvent(order.Id, orderCreated)
 	}
 }
 
 func (handler OrderHandlerImpl) eventAlreadyExist(
 	orderCommand command.CreateOrderCommand,
-	transactionId string) bool {
+	orderId string) bool {
 	var exist = false
 	for _, event := range handler.OrderDAO.GetEvents(OrderId{Value: orderCommand.Id}) {
-		if event.Exist(transactionId) {
+		if event.Exist(orderId) {
 			exist = true
 		}
 	}
