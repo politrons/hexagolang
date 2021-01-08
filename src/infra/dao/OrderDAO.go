@@ -34,7 +34,7 @@ func (orderDAO OrderDAOImpl) Rehydrate(orderId OrderId) chan OrderResponse {
 			order = event.Process(order)
 			exist = true
 		}
-		channel <- OrderResponse{Exist: true, Order: order}
+		channel <- OrderResponse{Exist: exist, Order: order}
 	}()
 	return channel
 }

@@ -50,13 +50,13 @@ In order to have an idempotent endpoint,We check if the Order already exist,
 if it does not, we create one, otherwise we just return the OrderId.
 */
 func createOrder(writer http.ResponseWriter, request *http.Request) {
-	orderId := request.Header.Get("orderId")
-	awaitOrderResponseChannel(orderService.GetOrder(orderId), func(orderResponse response.OrderResponse) {
+	transactionId := request.Header.Get("transactionId")
+	awaitOrderResponseChannel(orderService.GetOrder(transactionId), func(orderResponse response.OrderResponse) {
 		if !orderResponse.Exist {
-			log.Printf("Creating order for orderId Id :%s......", orderId)
-			orderHandler.CreateOrder(orderId, command.CreateOrderCommand{Id: orderId})
+			log.Printf("Creating order for transactionId :%s......", transactionId)
+			orderHandler.CreateOrder(transactionId, command.CreateOrderCommand{Id: transactionId})
 		}
-		renderResponse(writer, []byte(orderId))
+		renderResponse(writer, []byte(transactionId))
 	})
 }
 
@@ -82,13 +82,13 @@ We keep in a loop waiting for that channel to ends. In case ir does not end in 5
 and we consider the request wrong
 */
 func awaitOrderResponseChannel(channel chan response.OrderResponse,
-	action func(orderResponse response.OrderResponse)) {
+	function func(orderResponse response.OrderResponse)) {
 loop:
 	for {
 		select {
 		case orderResponse := <-channel:
-			action(orderResponse)
-		case <-time.After(5000 * time.Millisecond):
+			function(orderResponse)
+		case <-time.After(50000 * time.Millisecond):
 			break loop
 		}
 	}
