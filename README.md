@@ -15,7 +15,7 @@ curl  http://localhost:1981/order/
 
 #### Create Order
 ````
-curl -H "transactionId:the_transactionId" http://localhost:1981/order/create/
+curl -H "transactionId:2bb66a50-5091-415a-bd6a-5468ac1568bd" http://localhost:1981/order/create/
 ````
 
 #### Find Order
