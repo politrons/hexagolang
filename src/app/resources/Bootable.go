@@ -40,7 +40,7 @@ func main() {
 In order to have an idempotent endpoint in creation of Order, we generate a orderId
 and the client must use this id in the another endpoint to perform the creation of the Order
 */
-func createOrderId(writer http.ResponseWriter, request *http.Request) {
+func createOrderId(writer http.ResponseWriter, _ *http.Request) {
 	orderId := []byte(uuid.New().String())
 	renderResponse(writer, orderId)
 }
