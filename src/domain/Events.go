@@ -14,8 +14,7 @@ type ProductAdded struct {
 }
 
 type ProductRemoved struct {
-	TransactionId TransactionId
-	Product       Product
+	Product Product
 }
 
 func (event OrderCreated) Process(order Order) Order {
@@ -57,5 +56,5 @@ func (event ProductRemoved) Exist(transactionId string) bool {
 
 }
 func isSameProductAndTransaction(product Product, event ProductRemoved) bool {
-	return product.Id == event.Product.Id && event.TransactionId.Value == product.TransactionId.Value
+	return product.Id == event.Product.Id && event.Product.TransactionId.Value == product.TransactionId.Value
 }

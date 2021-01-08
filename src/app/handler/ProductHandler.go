@@ -35,6 +35,10 @@ func (handler ProductHandlerImpl) AddProduct(transactionId string, command comma
 	}
 }
 
+/**
+Handle function to add the add the event to Remove one product from the Order. Since basket might
+have several products with same id, we also discriminate by transactionId, to be sure we're idempotent
+*/
 func (handler ProductHandlerImpl) RemoveProduct(transactionId string, command command.RemoveProductCommand) {
 	exist := handler.eventAlreadyExist(OrderId{Value: command.OrderId}, transactionId)
 	if !exist {
@@ -44,14 +48,13 @@ func (handler ProductHandlerImpl) RemoveProduct(transactionId string, command co
 			Price:         Price{},
 			Description:   Description{},
 		}
-		productRemoved := ProductRemoved{Product: product, TransactionId: TransactionId{Value: transactionId}}
+		productRemoved := ProductRemoved{Product: product}
 		handler.OrderDAO.AddEvent(OrderId{Value: command.OrderId}, productRemoved)
 		handler.OrderDAO.Rehydrate(OrderId{Value: command.OrderId})
 	}
 }
 
-func (handler ProductHandlerImpl) eventAlreadyExist(orderId OrderId,
-	transactionId string) bool {
+func (handler ProductHandlerImpl) eventAlreadyExist(orderId OrderId, transactionId string) bool {
 	var exist = false
 	for _, event := range handler.OrderDAO.GetEvents(orderId) {
 		if event.Exist(transactionId) {
