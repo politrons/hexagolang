@@ -9,7 +9,7 @@ import (
 type ProductHandler interface {
 	AddProduct(transactionId string, command command.AddProductCommand)
 
-	RemoveProduct(transactionId string)
+	RemoveProduct(transactionId string, command command.RemoveProductCommand)
 }
 
 type ProductHandlerImpl struct {

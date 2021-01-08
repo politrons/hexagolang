@@ -122,8 +122,16 @@ func addProduct(writer http.ResponseWriter, request *http.Request) {
 }
 
 func removeProduct(writer http.ResponseWriter, request *http.Request) {
-	response := "Remove"
-	renderResponse(writer, []byte(response))
+	transactionId := request.Header.Get("transactionId")
+	log.Printf("Removing product for trasnsactionId %s!", transactionId)
+	decoder := json.NewDecoder(request.Body)
+	removeProductCommand := command.RemoveProductCommand{}
+	err := decoder.Decode(&removeProductCommand)
+	if err != nil {
+		writeErrorResponse(writer, err)
+	}
+	productHandler.RemoveProduct(transactionId, removeProductCommand)
+	renderResponse(writer, []byte(""))
 }
 
 func getArgumentAtIndex(request *http.Request, index int) string {
