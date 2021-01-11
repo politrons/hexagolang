@@ -4,14 +4,13 @@ import (
 	. "domain"
 	"log"
 )
-import . "infra/response"
 
 type OrderDAO interface {
 	Create() OrderDAO
 
 	GetEvents(orderId OrderId) []Event
 
-	Rehydrate(orderId OrderId) chan OrderResponse
+	Rehydrate(orderId OrderId) chan Order
 
 	AddEvent(orderId OrderId, event Event)
 }
@@ -35,16 +34,14 @@ using all the events that just happens from the creation of the order, and then 
 afterwards.
 Each Event must implement [Process] which it will interact with Order model to recreate to the latest state.
 */
-func (orderDAO OrderDAOImpl) Rehydrate(orderId OrderId) chan OrderResponse {
-	channel := make(chan OrderResponse)
-	var exist = false
+func (orderDAO OrderDAOImpl) Rehydrate(orderId OrderId) chan Order {
+	channel := make(chan Order)
 	go func() {
 		var order = Order{}
 		for _, event := range orderDAO.OrderEvents[orderId] {
 			order = event.Process(order)
-			exist = true
 		}
-		channel <- OrderResponse{Exist: exist, Order: order}
+		channel <- order
 	}()
 	return channel
 }

@@ -58,8 +58,8 @@ if it does not, we create one, otherwise we just return the OrderId.
 */
 func createOrder(writer http.ResponseWriter, request *http.Request) {
 	transactionId := request.Header.Get("transactionId")
-	orderResponse := <-orderService.GetOrder(transactionId)
-	if !orderResponse.Exist {
+	order := <-orderService.GetOrder(transactionId)
+	if order.Id.Value == "" {
 		log.Printf("Creating order for transactionId :%s......", transactionId)
 		orderHandler.CreateOrder(transactionId, command.CreateOrderCommand{Id: transactionId})
 	}
@@ -72,8 +72,8 @@ so using event sourcing, we can recreate the current status of the Order
 */
 func findOrder(writer http.ResponseWriter, request *http.Request) {
 	orderId := getArgumentAtIndex(request, 3)
-	orderResponse := <-orderService.GetOrder(orderId)
-	jsonResponse, err := json.Marshal(orderResponse.Order)
+	order := <-orderService.GetOrder(orderId)
+	jsonResponse, err := json.Marshal(order)
 	if err != nil {
 		panic(err)
 	}
@@ -94,6 +94,7 @@ func findProduct(writer http.ResponseWriter, request *http.Request) {
 /**
 We extract from headers the transactionId to ensure that the event has not been sent and process into the service twice
 implementing then idempotent
+This event it will implement the add product into the Order for an OrderId
 */
 func addProduct(writer http.ResponseWriter, request *http.Request) {
 	transactionId := request.Header.Get("transactionId")
@@ -108,6 +109,11 @@ func addProduct(writer http.ResponseWriter, request *http.Request) {
 	renderResponse(writer, []byte(""))
 }
 
+/**
+We extract from headers the transactionId to ensure that the event has not been sent and process into the service twice
+implementing then idempotent.
+This event it will implement the remove from the Order, the product that contains the specific Id in a specific OrderId
+*/
 func removeProduct(writer http.ResponseWriter, request *http.Request) {
 	transactionId := request.Header.Get("transactionId")
 	log.Printf("Removing product for trasnsactionId %s!", transactionId)

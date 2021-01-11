@@ -3,7 +3,6 @@ package service
 import (
 	. "domain"
 	"infra/dao"
-	. "infra/response"
 )
 
 /**
@@ -12,7 +11,7 @@ In order to have an implementation of this interface you need to have a [struct]
 you extend methods like the one defines in the interface
 */
 type OrderService interface {
-	GetOrder(id string) chan OrderResponse
+	GetOrder(id string) chan Order
 }
 
 /**
@@ -24,7 +23,7 @@ type OrderServiceImpl struct {
 	OrderDAO dao.OrderDAO
 }
 
-func (service OrderServiceImpl) GetOrder(id string) chan OrderResponse {
+func (service OrderServiceImpl) GetOrder(id string) chan Order {
 	return service.OrderDAO.Rehydrate(OrderId{Value: id})
 
 }
