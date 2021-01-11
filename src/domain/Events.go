@@ -39,9 +39,13 @@ func (event OrderCreated) Exist(transactionId string) bool {
 
 /**
 Add the product in the products list inside the order
+
+Also we increase the price of the product in the [TotalPrice] of the [Order]
+
 */
 func (event ProductAdded) Process(order Order) Order {
 	order.Products = append(order.Products, event.Product)
+	order.TotalPrice = Price{order.TotalPrice.Value + event.Product.Price.Value}
 	return order
 }
 
@@ -50,13 +54,17 @@ func (event ProductAdded) Exist(transactionId string) bool {
 }
 
 /**
-filter the list of products, and create a new one without the element we want to be removed.
+Filter the list of products, and create a new one without the element we want to be removed.
+
+Also we subtract the price of the product in the [TotalPrice] of the [Order]
 */
 func (event ProductRemoved) Process(order Order) Order {
 	var products []Product
 	for _, product := range order.Products {
 		if !isSameProductAndTransaction(product, event) {
 			products = append(products, product)
+		} else {
+			order.TotalPrice = Price{order.TotalPrice.Value - product.Price.Value}
 		}
 	}
 	order.Products = products

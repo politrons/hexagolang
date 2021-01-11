@@ -19,11 +19,17 @@ type OrderDAOImpl struct {
 	OrderEvents map[OrderId][]Event
 }
 
+/**
+Create function, it initialize the [OrderEvents] Map and return the instance of OrderDAO
+*/
 func (orderDAO OrderDAOImpl) Create() OrderDAO {
 	orderDAO.OrderEvents = make(map[OrderId][]Event)
 	return orderDAO
 }
 
+/**
+GetEvents function, it return the events for a specific OrderId
+*/
 func (orderDAO OrderDAOImpl) GetEvents(orderId OrderId) []Event {
 	return orderDAO.OrderEvents[orderId]
 }
@@ -47,7 +53,7 @@ func (orderDAO OrderDAOImpl) Rehydrate(orderId OrderId) chan Order {
 }
 
 /**
-We have the list of events attach in a map to an OrderId, in case the order was not yet created we have a nil map,
+AddEvent function, we have the list of events attach in a map to an OrderId, in case the order was not yet created we have a nil map,
 so we create one, and then we have to also check if the events already exist for that entry and if it does not
 we also create one.
 */
