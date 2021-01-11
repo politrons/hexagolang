@@ -1,5 +1,14 @@
 package domain
 
+/**
+This file contains the interface and all events structs that implement that interface.
+
+In order to be consider an event the [Process] and [Exist] function must be implemented for each
+struct type.
+
+For the [Process] function each event it will implement the logic of how to modify the Order type, to be
+Rehydrated to the last state after pass all event process over him, applying Event sourcing pattern.
+*/
 type Event interface {
 	Process(order Order) Order
 	Exist(transactionId string) bool
@@ -17,6 +26,9 @@ type ProductRemoved struct {
 	Product Product
 }
 
+/**
+Just return the order previously created
+*/
 func (event OrderCreated) Process(order Order) Order {
 	return event.Order
 }
