@@ -56,5 +56,5 @@ func (event ProductRemoved) Exist(transactionId string) bool {
 
 }
 func isSameProductAndTransaction(product Product, event ProductRemoved) bool {
-	return product.Id == event.Product.Id && event.Product.TransactionId.Value == product.TransactionId.Value
+	return product.Id == event.Product.Id
 }

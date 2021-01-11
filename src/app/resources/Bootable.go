@@ -9,21 +9,27 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"infra/dao"
-	"infra/response"
 	"log"
 	"net/http"
 	"strings"
-	"time"
 )
 
-var orderDAO dao.OrderDAO = dao.OrderDAOImpl{}
-var orderService OrderService = OrderServiceImpl{OrderDAO: orderDAO}
-var orderHandler handler.OrderHandler = handler.OrderHandlerImpl{OrderDAO: orderDAO}
-var productDAO dao.ProductDAO = dao.ProductDAOImpl{}
-var productService ProductService = ProductServiceImpl{ProductDAO: productDAO}
-var productHandler handler.ProductHandler = handler.ProductHandlerImpl{OrderDAO: orderDAO}
+var orderDAO dao.OrderDAO = nil
+var orderService OrderService = nil
+var orderHandler handler.OrderHandler = nil
+var productDAO dao.ProductDAO = nil
+var productService ProductService = nil
+var productHandler handler.ProductHandler = nil
 
 func main() {
+
+	orderDAO = dao.OrderDAOImpl{}.Create()
+	orderService = OrderServiceImpl{OrderDAO: orderDAO}
+	orderHandler = handler.OrderHandlerImpl{OrderDAO: orderDAO}
+	productDAO = dao.ProductDAOImpl{}
+	productService = ProductServiceImpl{ProductDAO: productDAO}
+	productHandler = handler.ProductHandlerImpl{OrderDAO: orderDAO}
+
 	port := "1981"
 	log.Printf("Running hexagonal server on port:%s......", port)
 	server := http.NewServeMux()
@@ -34,6 +40,7 @@ func main() {
 	server.HandleFunc("/product/add/", addProduct)
 	server.HandleFunc("/product/remove/", removeProduct)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), server))
+
 }
 
 /**
@@ -51,13 +58,12 @@ if it does not, we create one, otherwise we just return the OrderId.
 */
 func createOrder(writer http.ResponseWriter, request *http.Request) {
 	transactionId := request.Header.Get("transactionId")
-	awaitOrderResponseChannel(orderService.GetOrder(transactionId), func(orderResponse response.OrderResponse) {
-		if !orderResponse.Exist {
-			log.Printf("Creating order for transactionId :%s......", transactionId)
-			orderHandler.CreateOrder(transactionId, command.CreateOrderCommand{Id: transactionId})
-		}
-		renderResponse(writer, []byte(transactionId))
-	})
+	orderResponse := <-orderService.GetOrder(transactionId)
+	if !orderResponse.Exist {
+		log.Printf("Creating order for transactionId :%s......", transactionId)
+		orderHandler.CreateOrder(transactionId, command.CreateOrderCommand{Id: transactionId})
+	}
+	renderResponse(writer, []byte(transactionId))
 }
 
 /**
@@ -66,32 +72,13 @@ so using event sourcing, we can recreate the current status of the Order
 */
 func findOrder(writer http.ResponseWriter, request *http.Request) {
 	orderId := getArgumentAtIndex(request, 3)
-	awaitOrderResponseChannel(orderService.GetOrder(orderId), func(orderResponse response.OrderResponse) {
-		jsonResponse, err := json.Marshal(orderResponse.Order)
-		if err != nil {
-			panic(err)
-		}
-		renderResponse(writer, jsonResponse)
-	})
-
-}
-
-/**
-Function that receive a channel and a function to apply with the result of the channel once it ends.
-We keep in a loop waiting for that channel to ends. In case ir does not end in 50ms we break the loop
-and we consider the request wrong
-*/
-func awaitOrderResponseChannel(channel chan response.OrderResponse,
-	function func(orderResponse response.OrderResponse)) {
-loop:
-	for {
-		select {
-		case orderResponse := <-channel:
-			function(orderResponse)
-		case <-time.After(50000 * time.Millisecond):
-			break loop
-		}
+	orderResponse := <-orderService.GetOrder(orderId)
+	jsonResponse, err := json.Marshal(orderResponse.Order)
+	if err != nil {
+		panic(err)
 	}
+	renderResponse(writer, jsonResponse)
+
 }
 
 /**

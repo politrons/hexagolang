@@ -1,9 +1,14 @@
 package dao
 
-import . "domain"
+import (
+	. "domain"
+	"log"
+)
 import . "infra/response"
 
 type OrderDAO interface {
+	Create() OrderDAO
+
 	GetEvents(orderId OrderId) []Event
 
 	Rehydrate(orderId OrderId) chan OrderResponse
@@ -12,11 +17,16 @@ type OrderDAO interface {
 }
 
 type OrderDAOImpl struct {
-	orderEvents map[OrderId][]Event
+	OrderEvents map[OrderId][]Event
+}
+
+func (orderDAO OrderDAOImpl) Create() OrderDAO {
+	orderDAO.OrderEvents = make(map[OrderId][]Event)
+	return orderDAO
 }
 
 func (orderDAO OrderDAOImpl) GetEvents(orderId OrderId) []Event {
-	return orderDAO.orderEvents[orderId]
+	return orderDAO.OrderEvents[orderId]
 }
 
 /**
@@ -30,7 +40,7 @@ func (orderDAO OrderDAOImpl) Rehydrate(orderId OrderId) chan OrderResponse {
 	var exist = false
 	go func() {
 		var order = Order{}
-		for _, event := range orderDAO.orderEvents[orderId] {
+		for _, event := range orderDAO.OrderEvents[orderId] {
 			order = event.Process(order)
 			exist = true
 		}
@@ -45,13 +55,15 @@ so we create one, and then we have to also check if the events already exist for
 we also create one.
 */
 func (orderDAO OrderDAOImpl) AddEvent(orderId OrderId, event Event) {
-	if orderDAO.orderEvents == nil {
-		orderDAO.orderEvents = make(map[OrderId][]Event)
+	if orderDAO.OrderEvents == nil {
+		orderDAO.OrderEvents = make(map[OrderId][]Event)
 	}
-	events, exist := orderDAO.orderEvents[orderId]
+	events, exist := orderDAO.OrderEvents[orderId]
 	if !exist {
-		orderDAO.orderEvents[orderId] = []Event{event}
+		orderDAO.OrderEvents[orderId] = []Event{event}
+		log.Printf("Creating new Order events map %s!", orderDAO.OrderEvents)
 	} else {
-		orderDAO.orderEvents[orderId] = append(events, event)
+		orderDAO.OrderEvents[orderId] = append(events, event)
+		log.Printf("Adding event in current Order with id %s!", orderDAO.OrderEvents)
 	}
 }

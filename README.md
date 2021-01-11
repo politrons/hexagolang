@@ -23,7 +23,7 @@ curl -H "transactionId:8052c985-d1d8-480a-9e6c-ef5d0ed27126" http://localhost:19
 
 #### Find Order
 ````
-curl http://localhost:1981/order/find/{order_id}/
+curl http://localhost:1981/order/find/8052c985-d1d8-480a-9e6c-ef5d0ed27126/
 ````
 
 #### Find Product
@@ -33,10 +33,10 @@ curl http://localhost:1981/product/
 
 #### Add Product 
 ````
-curl -H "transactionId:the_transactionId" -X POST -d "{\"OrderId\": \"OrderId\",\"Id\": \"Id\",\"Price\": 10,\"Description\": \"Description\"}" http://localhost:1981/product/add/
+curl -H "transactionId:9f990929-74a7-44b2-a3dc-0a9abc3f3f61" -X POST -d "{\"OrderId\": \"8052c985-d1d8-480a-9e6c-ef5d0ed27126\",\"Id\": \"1234\",\"Price\": 10,\"Description\": \"Coca-Cole\"}" http://localhost:1981/product/add/
 ````
 
 #### Remove Product 
 ````
-curl -H "transactionId:the_transactionId" -X POST -d "{\"OrderId\": \"OrderId\",\"Id\": \"Id\"}" http://localhost:1981/product/remove/
+curl -H "transactionId:9f990929-74a7-44b2-a3dc-0a9abc3f3f62" -X POST -d "{\"OrderId\": \"8052c985-d1d8-480a-9e6c-ef5d0ed27126\",\"Id\": \"1234\"}" http://localhost:1981/product/remove/
 ````
