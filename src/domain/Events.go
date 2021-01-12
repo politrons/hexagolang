@@ -12,7 +12,6 @@ Rehydrated to the last state after pass all event process over him, applying [Ev
 type Event interface {
 	Process(order Order) Order
 	Exist(transactionId string) bool
-	GetProduct() (bool, Product)
 }
 
 type OrderCreated struct {
@@ -64,7 +63,7 @@ func (event ProductAdded) GetProduct() (bool, Product) {
 Check if the transaction used form the operation is the same that was used to create the TransactionId of the Product
 */
 func (event ProductAdded) Exist(transactionId string) bool {
-	return hasProductSameTransactionId(transactionId, event)
+	return event.Product.HasProductSameTransactionId(transactionId)
 }
 
 /**
@@ -75,7 +74,7 @@ Also we subtract the price of the product in the [TotalPrice] of the [Order]
 func (event ProductRemoved) Process(order Order) Order {
 	var products []Product
 	for _, product := range order.Products {
-		if !isSameProductAndTransaction(product, event) {
+		if !isSameProductId(product, event) {
 			products = append(products, product)
 		} else {
 			order.TotalPrice = Price{order.TotalPrice.Value - product.Price.Value}
@@ -86,22 +85,13 @@ func (event ProductRemoved) Process(order Order) Order {
 }
 
 func (event ProductRemoved) Exist(transactionId string) bool {
-	return hasProductSameTransactionId(transactionId, event)
+	return event.Product.HasProductSameTransactionId(transactionId)
 }
 
 func (event ProductRemoved) GetProduct() (bool, Product) {
 	return true, event.Product
 }
 
-func hasProductSameTransactionId(transactionId string, event Event) bool {
-	exist, product := event.GetProduct()
-	if exist {
-		return product.TransactionId == TransactionId{transactionId}
-	} else {
-		return false
-	}
-}
-
-func isSameProductAndTransaction(product Product, event ProductRemoved) bool {
+func isSameProductId(product Product, event ProductRemoved) bool {
 	return product.Id == event.Product.Id
 }

@@ -18,10 +18,18 @@ type Order struct {
 	TotalPrice Price
 }
 
+type ProductI interface {
+	HasProductSameTransactionId(transactionId string) bool
+}
+
 type Product struct {
 	TransactionId TransactionId
 	Id            ProductId
 	Name          Name
 	Price         Price
 	Description   Description
+}
+
+func (product Product) HasProductSameTransactionId(transactionId string) bool {
+	return product.TransactionId == TransactionId{transactionId}
 }
